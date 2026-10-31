@@ -79,6 +79,7 @@
 (require 'init-display-line-numbers)
 (require 'init-eglot)
 (require 'init-eldoc)
+(require 'init-eldoc-box)
 (require 'init-embark)
 (require 'init-embark-consult)
 (require 'init-flymake)
