@@ -11,7 +11,9 @@
 (require 'subr-x)
 
 (declare-function dired-advertise "dired")
+(declare-function dired-get-filename "dired")
 (declare-function dired-unadvertise "dired")
+(declare-function project-current "project")
 (declare-function project-root "project")
 (declare-function tramp-compute-multi-hops "tramp")
 (declare-function tramp-dissect-file-name "tramp")
@@ -212,20 +214,26 @@ privileges.  Dispatches to `my/find-file-as-user' or
 ;;;###autoload
 (defun my/copy-file-path (&optional arg)
   "Copy the current buffer's file path to the kill ring and clipboard.
-By default the path is abbreviated relative to the home directory (~/...).
-With \\[universal-argument], copy it relative to the project root instead;
-with a zero prefix ARG, copy the absolute path.  In Dired buffers the
-directory itself is copied."
+By default, copy the path relative to its project root, if any;
+otherwise abbreviate the home directory as ~/... where applicable.
+With a prefix ARG, copy the absolute path.
+In Dired, use the entry at point, or the current directory when
+point is not on an entry.  Detect the project from the target path."
   (interactive "P")
-  (let* ((file (or (buffer-file-name (buffer-base-buffer))
-                   (and (derived-mode-p 'dired-mode) default-directory)
-                   (user-error "Current buffer is not visiting a file")))
-         (path (pcase arg
-                 ('nil (abbreviate-file-name file))
-                 (0    (expand-file-name file))
-                 (_    (let ((project (or (project-current)
-                                          (user-error "No project found"))))
-                         (file-relative-name file (project-root project)))))))
+  (let* ((file (expand-file-name
+                (or (and (derived-mode-p 'dired-mode)
+                         (or (dired-get-filename nil t) default-directory))
+                    (buffer-file-name (buffer-base-buffer))
+                    (user-error "Current buffer is not visiting a file"))))
+         (project (unless arg
+                    (project-current nil
+                                     (if (file-directory-p file)
+                                         (file-name-as-directory file)
+                                       (file-name-directory file)))))
+         (path (cond
+                (arg file)
+                (project (file-relative-name file (project-root project)))
+                (t (abbreviate-file-name file)))))
     (kill-new path)
     (message "Copied %s" path)))
 

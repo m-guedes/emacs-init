@@ -9,8 +9,8 @@
 ;;; Code:
 
 (global-set-key (kbd "C-x k")         #'kill-current-buffer)
-;; `C-c f' copies the file path as `~/...'; `C-u C-c f' relative to the project
-;; root; `C-0 C-c f' as an absolute path.
+;; `C-c f' copies the project-relative path, or `~/...' outside a project;
+;; a prefix argument copies the absolute path.  Dired uses the entry at point.
 (global-set-key (kbd "C-c f")         #'my/copy-file-path)
 ;; Symbol in programming modes, word elsewhere; `0' forces word, `C-u' symbol.
 (global-set-key (kbd "C-c w")         #'my/copy-thing-at-point)
